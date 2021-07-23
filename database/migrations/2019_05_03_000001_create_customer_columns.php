@@ -18,6 +18,8 @@ class CreateCustomerColumns extends Migration
             $table->string('pm_type')->nullable();
             $table->string('pm_last_four', 4)->nullable();
             $table->timestamp('trial_ends_at')->nullable();
+            $table->string('card_brand')->nullable();
+            $table->string('card_last_four')->nullable();
         });
     }
 

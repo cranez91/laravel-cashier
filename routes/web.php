@@ -17,4 +17,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/pago', 'SuscripcionController@pago');
+Route::post('/pago', 'App\Http\Controllers\SuscripcionController@pago');
+Route::get('/suscripcion', function () {
+    return view('subscription');
+});
+Route::post('/procesa-suscripcion', 'App\Http\Controllers\SuscripcionController@procesa_suscripcion');
