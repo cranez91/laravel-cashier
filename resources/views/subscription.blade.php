@@ -25,7 +25,7 @@
             <div class="content">
                 <h1>Suscripción mensual de prueba</h1>
                 <h3>US$ 19.99</h3>    
-                <form action="/procesa-suscripcion" method="post">
+                <form action="/process-subscription" method="post">
                     {{ csrf_field() }}
                     <script
                         src="https://checkout.stripe.com/checkout.js" class="stripe-button"

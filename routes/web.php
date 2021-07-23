@@ -17,8 +17,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/pago', 'App\Http\Controllers\SuscripcionController@pago');
-Route::get('/suscripcion', function () {
+Route::post('/payment', 'App\Http\Controllers\SuscripcionController@pago');
+Route::get('/subscription', function () {
     return view('subscription');
 });
-Route::post('/procesa-suscripcion', 'App\Http\Controllers\SuscripcionController@procesa_suscripcion');
+Route::post('/process-subscription', 'App\Http\Controllers\SuscripcionController@processSubscription');
+Route::get('/upgrade-subscription', 'App\Http\Controllers\SuscripcionController@upgradeSubscription');
+Route::get('/cancel-subscription', 'App\Http\Controllers\SuscripcionController@cancelSubscription');
+
+Route::get('/invoices', 'App\Http\Controllers\SuscripcionController@invoices');
+Route::get('/invoice/{invoice_id}', 'App\Http\Controllers\SuscripcionController@invoice');

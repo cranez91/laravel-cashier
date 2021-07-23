@@ -22,22 +22,17 @@
     </head>
     <body class="antialiased">
         <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
-            <div class="content">
-                <h1>Compra de Prueba</h1>
-                <h3>US$ 19.99</h3>    
-                <form action="/payment" method="POST">
-                    {{ csrf_field() }}
-                    <script
-                        src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                        data-key="{{ config('services.stripe.key') }}"
-                        data-amount="1990"
-                        data-name="Compra"
-                        data-description="Prueba compra"
-                        data-image="https://stripe.com/img/documentation/checkout/marketplace.png"
-                        data-locale="auto">
-                    </script>
-                </form>
-            </div>
+        <div class="content">
+            <table>
+                @foreach ($invoices as $invoice)
+                    <tr>
+                        <td>{{ $invoice->date()->toFormattedDateString() }}</td>
+                        <td>{{ $invoice->total() }}</td>
+                        <td><a href="/invoice/{{ $invoice->id }}">Descargar</a></td>
+                    </tr>
+                @endforeach
+            </table>
+        </div>
         </div>
     </body>
 </html>
