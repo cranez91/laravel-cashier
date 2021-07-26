@@ -7,10 +7,13 @@ use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\Charge;
 use App\Models\User;
+use Stripe\Checkout\Session;
+use Laravel\Cashier\Cashier;
+use Stripe\StripeClient;
 
 class SuscripcionController extends Controller
 {
-    public function pago(Request $request)
+    public function payment(Request $request)
     {
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
@@ -30,7 +33,32 @@ class SuscripcionController extends Controller
         }
     }
 
-    public function processSubscription(Request $request)
+    public function createCheckoutSession(Request $request)
+    {
+        // Set your secret key. Remember to switch to your live secret key in production.
+        // See your keys here: https://dashboard.stripe.com/apikeys
+        Stripe::setApiKey(config('services.stripe.secret'));
+            
+        // The price ID passed from the front end.
+        //   $priceId = $_POST['priceId'];
+        $priceId = $request->priceId;
+            
+        $session = Session::create([
+            'success_url' => 'https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => 'https://example.com/canceled',
+            'payment_method_types' => ['card'],
+            'mode' => 'subscription',
+            'line_items' => [[
+                'price' => $priceId,
+                // For metered billing, do not pass quantity
+                'quantity' => 1,
+            ]],
+        ]);
+
+        return redirect($session->url);
+    }
+
+    /*public function processSubscription(Request $request)
     {
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
@@ -43,7 +71,7 @@ class SuscripcionController extends Controller
         } catch (\Exception $ex) {
             return $ex->getMessage();
         }
-    }
+    }*/
 
     public function upgradeSubscription(Request $request)
     {
@@ -89,11 +117,104 @@ class SuscripcionController extends Controller
             $user = User::find(1);
                 
             return $user->downloadInvoice($invoice_id, [
-                'vendor'  => 'Zizicom',
+                'vendor'  => 'LUIS ENTERPRISES',
                 'product' => 'Test Plan',
             ]);
         } catch (\Exception $ex) {
             return $ex->getMessage();
         }
+    }
+
+
+
+// **********************************************************************
+// **********************************************************************
+// **********************************************************************
+
+    public function index()
+    {
+        return view('subscription.create');
+    }
+
+    public function orderPost(Request $request)
+    {
+        $user = User::find(1);
+        $input = $request->all();
+        $token =  $request->stripeToken;
+        $paymentMethod = $request->paymentMethod;
+
+        try {
+            Stripe::setApiKey(env('STRIPE_SECRET'));
+            
+            if (is_null($user->stripe_id)) {
+                $stripeCustomer = $user->createAsStripeCustomer();
+            }
+            
+            Customer::createSource(
+                $user->stripe_id,
+                ['source' => $token]
+            );
+
+            $user->newSubscription('test', $input['plane'])
+                ->create($paymentMethod, [
+                    'email' => $user->email,
+                ]);
+
+            return back()->with('success','Subscription is completed.');
+        } catch (Exception $e) {
+            return back()->with('success',$e->getMessage());
+        }
+    }
+
+// **********************************************************************
+// **********************************************************************
+// **********************************************************************
+
+
+    public function retrievePlans() {
+        $key = config('services.stripe.secret');
+        $stripe = new StripeClient($key);
+        $plansraw = $stripe->plans->all();
+        $plans = $plansraw->data;
+        
+        foreach($plans as $plan) {
+            $prod = $stripe->products->retrieve(
+                $plan->product,[]
+            );
+            $plan->product = $prod;
+        }
+        return $plans;
+    }
+
+    public function showSubscription() {
+        $plans = $this->retrievePlans();
+        $user = User::find(1);
+        
+        return view('subscription.subscribe', [
+            'user'=> $user,
+            'intent' => $user->createSetupIntent(),
+            'plans' => $plans
+        ]);
+    }
+
+    public function processSubscription(Request $request)
+    {
+        $user = User::find(1);
+        $paymentMethod = $request->input('payment_method');
+                   
+        $user->createOrGetStripeCustomer();
+        $user->addPaymentMethod($paymentMethod);
+        $plan = $request->input('plan');       
+        
+        try {
+            $user->newSubscription('default', $plan)
+                ->create($paymentMethod, [
+                    'email' => $user->email
+                ]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => 'Error creating subscription. ' . $e->getMessage()]);
+        }
+       
+        return redirect('dashboard');
     }
 }

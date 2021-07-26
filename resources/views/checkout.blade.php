@@ -22,22 +22,12 @@
     </head>
     <body class="antialiased">
         <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
-            <div class="content">
-                <h1>Suscripción mensual de prueba</h1>
-                <h3>US$ 19.99</h3>    
-                <form action="/process-subscription" method="post">
-                    {{ csrf_field() }}
-                    <script
-                        src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                        data-key="{{ config('services.stripe.key') }}"
-                        data-amount="1990"
-                        data-name="Plan Plateado - Mensual"
-                        data-description="Plan de prueba para stripe mensual"
-                        data-image="https://stripe.com/img/documentation/checkout/marketplace.png"
-                        data-locale="auto">
-                    </script>
-                </form>
-            </div>
+        <form action="/create-checkout-session" method="POST">
+            <!-- Note: If using PHP set the action to /create-checkout-session.php -->
+
+            <input type="hidden" name="priceId" value="price_1JGB81G5mi1FkQUVlCisP3nV" />
+            <button type="submit">Checkout</button>
+        </form>
         </div>
     </body>
 </html>
